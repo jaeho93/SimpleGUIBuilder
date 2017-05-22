@@ -73,13 +73,5 @@ public class Rectangle
 	{
 		return width*height;
 	}
-	
-	public boolean overlaps(Rectangle a)
-	{
-		if ((x>a.x+a.width) || (a.x>x+width) || (y>a.y+a.height) || (a.y>y+height))
-		{
-			return false;
-		}
-		return true;
-	}
+
 }
