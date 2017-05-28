@@ -1,10 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.Vector;
 import javax.swing.*;
 
-class MainFrame implements ActionListener{
-   
+class MainFrame<MyRec> implements ActionListener{
+   private Modeln a = new Modeln();
    
    private JFrame frm = new JFrame();                         // 메인 프레임      생성
    private Container contentPane = frm.getContentPane();	  // 프레임에 컨테이너 생성
@@ -34,65 +36,20 @@ class MainFrame implements ActionListener{
    JTextField taField = new JTextField(100);
    JTextField ttField = new JTextField(100);
    JTextField tvField = new JTextField(100);
+   LinkedList<Modeln.MyRec> myList;
+   ListIterator<Modeln.MyRec> it;
+   Modeln.MyRec thisrec;
    class MyPanel extends JPanel{
-		
-		Point startP=null;
-		Point endP=null;
-		
-		Vector<Point> sv = new Vector<Point>(); // 시작
-		Vector<Point> se = new Vector<Point>(); // 끝점
 
-		public MyPanel(){
-			//리스너를 공통으로해야  변수들이 공유된다.
-			MyMouseListener ml = new MyMouseListener();
-			
-			this.addMouseListener(ml); // 리스너
-			this.addMouseMotionListener(ml);
-		}
-		
-		public void paintComponent(Graphics g){
-			super.paintComponent(g); // 부모 페인트호출
-			
-			if(sv.size() != 0){
-				for(int i=0;i<se.size();i++){ //벡터크기만큼
-					Point sp = sv.get(i); // 벡터값을꺼내다
-					Point ep = se.get(i);	
-					g.drawRect(sp.x, sp.y, ep.x, ep.y);//그리다
-				}
-			}
-			if(startP != null)
-				g.drawRect(startP.x, startP.y, endP.x, endP.y);				
-		}
-		
-		class MyMouseListener extends MouseAdapter implements MouseMotionListener{
-			public void mousePressed(MouseEvent e){
-				startP = e.getPoint();
-				sv.add(e.getPoint()); // 클릭한부분을 시작점으로
-			}
-			public void mouseReleased(MouseEvent e){
-				se.add(e.getPoint()); // 드래그 한부분을 종료점으로
-				endP = e.getPoint();
-				repaint(); // 다시그려라
-			}
-			
-			public void mouseDragged(MouseEvent e){
-				endP = e.getPoint();
-				stateLabel.setText("("+startP.x+", "+startP.y+", "+(endP.x+startP.x)+", "+(endP.y+startP.y)+")"+" w : "+endP.x+" h : "+endP.y);
-				repaint();
-				editAt(startP, endP);
-			}
-			
-			public void mouseMoved(MouseEvent e){
-				
-			}
-		}
+	public Model model;
 	}
 
 
    public MainFrame(){
       
       //속성 페인
-      
+      a.mf = this;
+      myList = a.MyList;
       xField.setBounds(185,190,50,20);
       xField.setHorizontalAlignment(JTextField.RIGHT);
       
@@ -146,13 +103,11 @@ class MainFrame implements ActionListener{
       ePanel.setBounds(300,100,1000,800);
       ePanel.setBackground(Color.WHITE);
       ePanel.setVisible(true);
-      
-      MyPanel eePanel = new MyPanel();
-      eePanel.setLayout(null);;
-      eePanel.setBounds(300,50,1000,950);
-      eePanel.setBackground(Color.WHITE);
-      eePanel.setVisible(true);
-      
+
+      a.setLayout(null);
+      a.setBounds(300,50,1000,950);
+      a.setBackground(Color.WHITE);
+      a.setVisible(true);
       
       //메뉴바에 메뉴 추가
       menuBar.add(fileMenu);
@@ -208,7 +163,7 @@ class MainFrame implements ActionListener{
         
         //contentPane.setLayout(null);
         contentPane.add(toolBar, BorderLayout.NORTH);
-        contentPane.add(eePanel);
+        contentPane.add(a);
         contentPane.add(aPanel);
         frm.add(stateLabel, BorderLayout.SOUTH);
       
@@ -278,11 +233,47 @@ class MainFrame implements ActionListener{
             }
             else if(e.getSource() == applyButton)
             {
-            	stateLabel.setText(applyButton.getText() + "이 선택 되었습니다");
-            	ColorFrame my = new ColorFrame();
+            	
+            	try{
+                	int x = Integer.parseInt(xField.getText());
+                	int y = Integer.parseInt(yField.getText());
+                	int w = Integer.parseInt(wField.getText());
+                	int h = Integer.parseInt(hField.getText());
+                	String s = tvField.getText();
+            		if(isThereByName(s)){
+            			a.setSize(x, y, w, h, thisrec);
+            			thisrec = null;
+            		}
+            		else
+            		a.newMyRec(x, y, w, h, s);
+            	}
+            	catch(NumberFormatException e1)
+            	{
+            		stateLabel.setText("숫자를 입력하세요.");
+            	}
             }
             
             }
+        public void setRecAttribution(Modeln.MyRec rec){
+        	xField.setText(Integer.toString(rec.getX()));
+        	yField.setText(Integer.toString(rec.getY()));
+        	wField.setText(Integer.toString(rec.getW()));
+        	hField.setText(Integer.toString(rec.getH()));
+        	tvField.setText(rec.getName());
+        	stateLabel.setText(rec.getName() + " : "+"("+rec.getX()+", "+rec.getY()+") W: "+rec.getW()+" H: "+rec.getH());
+        }
+        public boolean isThereByName(String name){
+        	it = myList.listIterator();
+    		while(it.hasNext()){
+    			Modeln.MyRec rec = it.next();
+    			if(name.equals(rec.getName()))
+    			{
+    				thisrec = rec;
+    				return true;
+    			}
+    		}
+    		return false;
+        }
         void editAt(Point s, Point e){
         	xField.setText(Integer.toString((int)s.getX()));
         	yField.setText(Integer.toString((int)s.getY()));
@@ -296,6 +287,6 @@ class MainFrame implements ActionListener{
 
 public class SimpleGUIBuilder{
    public static void main(String[] args) {
-      new MainFrame();
+      MainFrame mf = new MainFrame();
    }
 }
